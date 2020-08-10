@@ -2,12 +2,14 @@
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+
 using RobotService.Core.Contracts;
 using RobotService.Models.Garages;
 using RobotService.Models.Procedures;
 using RobotService.Models.Procedures.Contracts;
 using RobotService.Models.Robots;
 using RobotService.Models.Robots.Contracts;
+using RobotService.Utilities;
 using RobotService.Utilities.Messages;
 
 namespace RobotService.Core
@@ -16,13 +18,16 @@ namespace RobotService.Core
     {
         private readonly Garage garage;
         private IRobot robot;
-        private IProcedure procedure;
-        private readonly Dictionary<string, IList<IRobot>> collectionWithProcedures = new Dictionary<string, IList<IRobot>>();
+        private readonly Dictionary<ProcedureType, IProcedure> collectionWithProcedures;
         public Controller()
         {
             this.garage = new Garage();
-            
+            this.collectionWithProcedures = new Dictionary<ProcedureType, IProcedure>();
+            this.InitCollection();
+
         }
+
+
         public string Manufacture(string robotType, string name, int energy, int happiness, int procedureTime)
         {
             if (robotType == nameof(HouseholdRobot))
@@ -52,54 +57,62 @@ namespace RobotService.Core
         public string Chip(string robotName, int procedureTime)
         {
 
-            procedure = new Chip();
-
-            DoServiceProcedure(robotName, procedureTime);
-            string message = string.Format(OutputMessages.ChipProcedure, robotName);
+            string message = DoServiceProcedure(
+                robotName,
+                procedureTime,
+                ProcedureType.Chip,
+                OutputMessages.ChipProcedure);
             return message;
         }
 
 
         public string TechCheck(string robotName, int procedureTime)
         {
-            procedure = new TechCheck();
-
-            DoServiceProcedure(robotName, procedureTime);
-            string message = string.Format(OutputMessages.TechCheckProcedure, robotName);
+            string message = DoServiceProcedure(
+                robotName,
+                procedureTime,
+                ProcedureType.TechCheck,
+                OutputMessages.TechCheckProcedure);
             return message;
         }
 
         public string Rest(string robotName, int procedureTime)
         {
-            procedure = new Rest();
-
-            DoServiceProcedure(robotName, procedureTime);
-            string message = string.Format(OutputMessages.RestProcedure, robotName);
+            string message = DoServiceProcedure(
+                robotName,
+                procedureTime,
+                ProcedureType.Rest,
+                OutputMessages.RestProcedure);
             return message;
         }
 
         public string Work(string robotName, int procedureTime)
         {
-            procedure = new Work();
-
-            DoServiceProcedure(robotName, procedureTime);
-            string message = string.Format(OutputMessages.WorkProcedure, robotName, procedureTime);
+            string message = DoServiceProcedure(
+                robotName,
+                procedureTime,
+                ProcedureType.Work,
+                OutputMessages.WorkProcedure);
             return message;
         }
 
         public string Charge(string robotName, int procedureTime)
         {
-            procedure = new Charge();
-            DoServiceProcedure(robotName, procedureTime);
-            string message = string.Format(OutputMessages.ChargeProcedure, robotName);
+            string message = DoServiceProcedure(
+                robotName,
+                procedureTime,
+                ProcedureType.Work,
+                OutputMessages.ChargeProcedure);
             return message;
         }
 
         public string Polish(string robotName, int procedureTime)
         {
-            procedure = new Polish();
-            DoServiceProcedure(robotName, procedureTime);
-            string message = string.Format(OutputMessages.PolishProcedure, robotName);
+            string message = DoServiceProcedure(
+                robotName,
+                procedureTime,
+                ProcedureType.Polish,
+                OutputMessages.PolishProcedure);
             return message;
         }
 
@@ -107,51 +120,61 @@ namespace RobotService.Core
         {
             IRobot robotForSell = this.garage.Robots.FirstOrDefault(n => n.Key == robotName).Value;
             this.garage.Sell(robotName, ownerName);
-            
-            if (robotForSell.IsChipped)
-            {
-                string message = string.Format(OutputMessages.SellChippedRobot, ownerName);
-                return message;
-            }
-            else
-            {
-                string message = string.Format(OutputMessages.SellNotChippedRobot, ownerName);
-                return message;
-            }
+
+            return string.Format(robotForSell.IsChipped
+                ? OutputMessages.SellChippedRobot
+                : OutputMessages.SellNotChippedRobot
+                , ownerName);
         }
 
         public string History(string procedureType)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var collectionWithProcedure in collectionWithProcedures
-                .Where(x=>x.Key == procedureType))
+                .Where(x => x.Key.ToString() == procedureType))
             {
-                sb.AppendLine(collectionWithProcedure.Key);
-                foreach (var robotToShow in collectionWithProcedure.Value)
-                {
-                    sb.AppendLine(robotToShow.ToString());
-                }
+                sb.AppendLine(collectionWithProcedure.Value.History());
             }
 
             return sb.ToString().TrimEnd();
         }
 
-        private void DoServiceProcedure(string robotName, int procedureTime)
+        private string DoServiceProcedure(string robotName, int procedureTime, ProcedureType procedureType, string outputMessage)
         {
-            var procedureName = this.procedure.GetType().Name;
-            if (!collectionWithProcedures.ContainsKey(procedureName))
+            string outputMsg;
+
+            IRobot robot = GetRobotByName(robotName);
+            IProcedure procedure = this.collectionWithProcedures[procedureType];
+            procedure.DoService(robot, procedureTime);
+
+            if (procedureType.ToString() == nameof(Work))
             {
-                collectionWithProcedures[procedureName] = new List<IRobot>();
-                
+                outputMsg = string.Format(outputMessage, robotName, procedureTime);
+                return outputMsg;
             }
-            this.robot = this.garage.Robots.FirstOrDefault(n => n.Key == robotName).Value;
+            outputMsg = string.Format(outputMessage, robotName);
+            return outputMsg;
+        }
+
+        private IRobot GetRobotByName(string robotName)
+        {
+            robot = this.garage.Robots.FirstOrDefault(n => n.Key == robotName).Value;
             if (robot == null)
             {
                 string message = string.Format(ExceptionMessages.InexistingRobot, robotName);
                 throw new ArgumentException(message);
             }
-            procedure.DoService(robot, procedureTime);
-            collectionWithProcedures[procedureName].Add(robot);
+
+            return robot;
+        }
+        private void InitCollection()
+        {
+            this.collectionWithProcedures.Add(ProcedureType.Chip, new Chip());
+            this.collectionWithProcedures.Add(ProcedureType.TechCheck, new TechCheck());
+            this.collectionWithProcedures.Add(ProcedureType.Rest, new Rest());
+            this.collectionWithProcedures.Add(ProcedureType.Work, new Work());
+            this.collectionWithProcedures.Add(ProcedureType.Charge, new Charge());
+            this.collectionWithProcedures.Add(ProcedureType.Polish, new Polish());
         }
     }
 }
