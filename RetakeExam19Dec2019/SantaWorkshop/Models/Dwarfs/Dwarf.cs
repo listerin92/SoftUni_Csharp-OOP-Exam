@@ -10,49 +10,44 @@ namespace SantaWorkshop.Models.Dwarfs
     {
         private string name;
         private int energy;
-        private readonly ICollection<IInstrument> instruments;
+        private const int WORK_ENERGY_DECR = 10;
 
+        private Dwarf()
+        {
+            this.Instruments = new List<IInstrument>();
 
+        }
         protected Dwarf(string name, int energy)
+            : this()
         {
             this.Name = name;
             this.Energy = energy;
-            this.instruments = new List<IInstrument>();
         }
-        public string Name 
+        public string Name
         {
             get => this.name;
             private set
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    throw new ArgumentException(ExceptionMessages.InvalidDwarfName);
+                    throw new ArgumentException
+                        (ExceptionMessages.InvalidDwarfName);
                 }
 
                 this.name = value;
             }
         }
-        public int Energy 
+        public int Energy
         {
             get => this.energy;
             protected set
-            {
-                if (value < 0)
-                {
-                    value = 0;
-                }
-
-                this.energy = value;
-            }
+                => this.energy = value > 0 ? value : 0;
         }
-
-        public ICollection<IInstrument> Instruments => this.instruments;
-
+        public ICollection<IInstrument> Instruments { get; }
         public virtual void Work()
         {
-            this.Energy -= 10;
+            this.Energy -= WORK_ENERGY_DECR;
         }
-
         public void AddInstrument(IInstrument instrument)
         {
             this.Instruments.Add(instrument);

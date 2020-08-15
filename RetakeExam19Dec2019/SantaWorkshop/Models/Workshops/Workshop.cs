@@ -11,42 +11,29 @@ namespace SantaWorkshop.Models.Workshops
         //TODO Should check sequence of operations
         public void Craft(IPresent present, IDwarf dwarf)
         {
-            IInstrument instrument = TakeNewInstrument(dwarf);
-            while (true)
+            // loop through instruments
+            while (dwarf.Energy > 0 && dwarf.Instruments.Any())
             {
+                IInstrument instrument = dwarf.Instruments.First();
+
+                while (!present.IsDone() && dwarf.Energy > 0 && !instrument.IsBroken())
+                {
+
+                    dwarf.Work();
+                    present.GetCrafted();
+                    instrument.Use();
+                }
+
+                if (instrument.IsBroken())
+                {
+                    dwarf.Instruments.Remove(instrument);
+                }
+
                 if (present.IsDone())
                 {
                     break;
                 }
-                if (instrument == null)
-                {
-                    break;
-                }
-                if (instrument.IsBroken())
-                {
-                    instrument = TakeNewInstrument(dwarf);
-                    if (instrument == null)
-                    {
-                        break;
-                    }
-                }
-
-                if (dwarf.Energy == 0)
-                {
-                    break;
-                }
-
-
-                instrument.Use();
-                present.GetCrafted();
-                dwarf.Work();
             }
-        }
-
-        private static IInstrument TakeNewInstrument(IDwarf dwarf)
-        {
-            var instrument = dwarf.Instruments.FirstOrDefault(x => !x.IsBroken());
-            return instrument;
         }
     }
 }

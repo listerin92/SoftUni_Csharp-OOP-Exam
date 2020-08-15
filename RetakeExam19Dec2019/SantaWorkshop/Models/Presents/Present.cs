@@ -8,7 +8,7 @@ namespace SantaWorkshop.Models.Presents
     {
         private string name;
         private int energyRequired;
-
+        private const int CRAFT_ENERGY_DECR = 10;
         public Present(string name, int energyRequired)
         {
             this.Name = name;
@@ -21,7 +21,8 @@ namespace SantaWorkshop.Models.Presents
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    throw new ArgumentException(ExceptionMessages.InvalidPresentName);
+                    throw new ArgumentException
+                        (ExceptionMessages.InvalidPresentName);
                 }
                 this.name = value;
             }
@@ -30,21 +31,15 @@ namespace SantaWorkshop.Models.Presents
         public int EnergyRequired
         {
             get => this.energyRequired;
-            protected set
-            {
-                if (value < 0)
-                {
-                    value = 0;
-                }
-
-                this.energyRequired = value;
-            }
+            private set 
+                => this.energyRequired = value > 0 ? value : 0;
         }
         public void GetCrafted()
         {
-            this.EnergyRequired -= 10; //TODO Should I check again for below zero ?
+            this.EnergyRequired -= CRAFT_ENERGY_DECR;
         }
 
-        public bool IsDone() => this.EnergyRequired == 0;
+        public bool IsDone() 
+            => this.EnergyRequired == 0;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using SantaWorkshop.Models.Presents.Contracts;
 using SantaWorkshop.Repositories.Contracts;
@@ -7,7 +8,7 @@ namespace SantaWorkshop.Repositories
 {
     public class PresentRepository : IRepository<IPresent>
     {
-        private readonly List<IPresent> models;
+        private readonly ICollection<IPresent> models;
 
         public PresentRepository()
         {
@@ -15,7 +16,8 @@ namespace SantaWorkshop.Repositories
         }
 
         public IReadOnlyCollection<IPresent> Models 
-            => this.models.AsReadOnly();
+            => (IReadOnlyCollection<IPresent>)this.models;
+
         public void Add(IPresent model) 
             => this.models.Add(model);
 

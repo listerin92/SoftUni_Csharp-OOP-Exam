@@ -4,6 +4,7 @@ namespace SantaWorkshop.Models.Instruments
 {
     public class Instrument : IInstrument
     {
+        private const int USE_POWER_DECR = 10;
         private int power;
         public Instrument(int power)
         {
@@ -11,27 +12,13 @@ namespace SantaWorkshop.Models.Instruments
         }
         public int Power
         {
-            get
-            {
-                return this.power;
-            }
-            private set
-            {
-                if (value < 0)
-                {
-                    this.power = 0;
-                }
-
-                this.power = value;
-            }
+            get => this.power;
+            private set 
+                => this.power = value > 0 ? value : 0;
         }
         public void Use()
         {
-            this.Power -= 10;
-            if (this.Power < 0)
-            {
-                this.Power = 0;
-            }
+            this.Power -= USE_POWER_DECR;
         }
 
         public bool IsBroken() => this.Power == 0;
