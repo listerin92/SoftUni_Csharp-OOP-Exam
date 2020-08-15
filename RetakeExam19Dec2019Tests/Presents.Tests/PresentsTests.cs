@@ -62,6 +62,13 @@ namespace Presents.Tests
         }
 
         [Test]
+        public void TestBagCreateMessage()
+        {
+            string expectedMessage = $"Successfully added present {presentOne.Name}.";
+            string result = bag.Create(presentOne);
+            Assert.AreEqual(expectedMessage, result);
+        }
+        [Test]
         public void TestBagConstructorNull()
         {
             Assert.IsNotNull(this.bag.GetPresents());
@@ -119,7 +126,7 @@ namespace Presents.Tests
             this.bag.Create(presentOne);
             this.bag.Create(anotherPresent);
             Present acutalPresent = this.bag.GetPresentWithLeastMagic();
-            Assert.AreEqual(10, acutalPresent.Magic);
+            Assert.AreEqual(anotherPresent, acutalPresent);
         }
 
         [Test]
@@ -130,8 +137,20 @@ namespace Presents.Tests
             this.bag.Create(presentOne);
             this.bag.Create(anotherPresent);
             var actualPresent = this.bag.GetPresent("Gosho");
-            Assert.AreEqual(10, anotherPresent.Magic);
 
+            Assert.AreEqual(10, actualPresent.Magic);
+
+        }
+        [Test]
+        public void TestGetPresentNulException()
+        {
+            //Present present = this.presents.FirstOrDefault(p => p.Name == name);
+            Present anotherPresent = new Present("Gosho", 10);
+            this.bag.Create(presentOne);
+            this.bag.Create(anotherPresent);
+            var actualPresent = this.bag.GetPresent("GoshoDetGoNema");
+
+            Assert.AreEqual(null, actualPresent);
         }
     }
 }
