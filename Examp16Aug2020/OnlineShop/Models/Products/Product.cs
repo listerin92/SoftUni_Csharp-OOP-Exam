@@ -8,7 +8,7 @@ namespace OnlineShop.Models.Products
         private int id;
         private string manufacturer;
         private string model;
-        private decimal price;
+        protected decimal price;
         protected double overallPerformance;
 
         protected Product(int id, string manufacturer, string model, decimal price, double overallPerformance)
@@ -49,10 +49,15 @@ namespace OnlineShop.Models.Products
         public virtual decimal Price
         {
             get => this.price;
-            private set => this.price = value > 0.0m
-                ? value
-                : throw new ArgumentException
-                    (ExceptionMessages.InvalidPrice);
+            private set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentException(ExceptionMessages.InvalidPrice);
+                }
+
+                this.price = value;
+            }
 
         }
 
@@ -73,7 +78,7 @@ namespace OnlineShop.Models.Products
         
         public override string ToString()
         {
-            return $"Overall Performance: {this.OverallPerformance:f2}. Price: {this.Price:f2} - {this.GetType().Name}: {this.Manufacturer} {this.Model} (Id: {this.Id})";
+            return $"Overall Performance: {this.OverallPerformance:F2}. Price: {this.Price:F2} - {this.GetType().Name}: {this.Manufacturer} {this.Model} (Id: {this.Id})";
         }
     }
 }

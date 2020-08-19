@@ -14,6 +14,5 @@ namespace OnlineShop.Models.Products.Components
 
 
 
-        public override ComponentType ComponentType => ComponentType.CentralProcessingUnit;
     }
 }

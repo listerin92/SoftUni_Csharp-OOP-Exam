@@ -11,7 +11,7 @@ namespace OnlineShop.Models.Products.Computers
     public abstract class Computer : Product, IComputer
     {
         //private double overallPerformance;
-        private double peripheralsAverageOverallPerformance;
+        private double peripheralsAverage;
         private readonly ICollection<IComponent> components;
         private readonly ICollection<IPeripheral> peripherals;
         private decimal price;
@@ -21,8 +21,7 @@ namespace OnlineShop.Models.Products.Computers
         {
             this.components = new List<IComponent>();
             this.peripherals = new List<IPeripheral>();
-            this.OverallPerformance = overallPerformance;
-            this.price = price;
+
         }
 
         public IReadOnlyCollection<IComponent> Components
@@ -48,9 +47,13 @@ namespace OnlineShop.Models.Products.Computers
         {
             get
             {
-                var sumAllComponentPrice = this.Components.Sum(s => s.Price);
-                var sumAllPeripheralPrice = this.Peripherals.Sum(s => s.Price);
-                return sumAllComponentPrice + sumAllPeripheralPrice + this.price;
+                var sumAllComponentPrice = this.Components.Any()
+                ? this.Components.Sum(s => s.Price)
+                    : 0;
+                var sumAllPeripheralPrice = this.Peripherals.Any()
+                ? this.Peripherals.Sum(s => s.Price)
+                    : 0;
+                return sumAllComponentPrice + sumAllPeripheralPrice + base.price;
             }
 
         }
@@ -84,11 +87,11 @@ namespace OnlineShop.Models.Products.Computers
 
         public void AddPeripheral(IPeripheral peripheral)
         {
-            var peripheralToAdd = this.Peripherals.FirstOrDefault(p => p.GetType().Name == peripheral.GetType().Name);
-            if (peripheralToAdd != null)
+            var peripheralType = peripheral.GetType().Name;
+            var productExists = ProductExists(peripheralType, this.Peripherals);
+            if (productExists)
             {
-                string message = string.Format(ExceptionMessages.ExistingPeripheral, peripheral.Model,
-                    this.GetType().Name, this.Id);
+                string message = string.Format(ExceptionMessages.ExistingPeripheral, peripheral.Model, this.GetType().Name, this.Id);
                 throw new ArgumentException(message);
             }
             this.peripherals.Add(peripheral);
@@ -96,13 +99,16 @@ namespace OnlineShop.Models.Products.Computers
 
         public IPeripheral RemovePeripheral(string peripheralType)
         {
-            var peripheral = this.Peripherals.FirstOrDefault(co => co.GetType().Name == peripheralType);
-            if (peripheral == null)
+
+            var productExists = ProductExists(peripheralType, (IReadOnlyCollection<IPeripheral>)this.peripherals);
+
+            if (!productExists)
             {
                 string message = string.Format(ExceptionMessages.NotExistingComponent, peripheralType,
                     this.GetType().Name, this.Id);
                 throw new ArgumentException(message);
             }
+            var peripheral = this.peripherals.FirstOrDefault(p => p.GetType().Name == peripheralType);
             this.peripherals.Remove(peripheral);
             return peripheral;
         }
@@ -110,25 +116,32 @@ namespace OnlineShop.Models.Products.Computers
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Overall Performance: {this.OverallPerformance:f2}. Price: {this.Price:f2} - {this.GetType().Name}: {this.Manufacturer} {this.Model} (Id: {this.Id})");
+
+            sb.AppendLine(base.ToString());
             sb.AppendLine($" Components ({this.Components.Count}):");
+
             foreach (var component in this.Components)
             {
                 sb.AppendLine($"  {component}");
             }
 
-            this.peripheralsAverageOverallPerformance = this.Peripherals.Sum(x => x.OverallPerformance) / this.Peripherals.Count;
-            if (this.Peripherals.Count == 0)
-            {
-                this.peripheralsAverageOverallPerformance = 0.00;
-            }
+            this.peripheralsAverage = this.Peripherals.Any()
+                ? this.Peripherals.Average(x => x.OverallPerformance)
+                : 0;
 
-            sb.AppendLine($" Peripherals ({this.Peripherals.Count}); Average Overall Performance ({this.peripheralsAverageOverallPerformance:f2}):");
+            sb.AppendLine(
+                $" Peripherals ({this.Peripherals.Count}); Average Overall Performance ({peripheralsAverage:F2}):");
+
             foreach (var peripheral in this.Peripherals)
             {
-                sb.AppendLine($"  {peripheral}");
+                sb.AppendLine($"  {peripheral.ToString()}");
             }
             return sb.ToString().TrimEnd();
+        }
+
+        private bool ProductExists<T>(string componentType, IReadOnlyCollection<T> collection)
+        {
+            return collection.Any(c => c.GetType().Name == componentType);
         }
     }
 }

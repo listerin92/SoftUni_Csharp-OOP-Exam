@@ -16,10 +16,11 @@ namespace OnlineShop
 
             IReader reader = new ConsoleReader();
             IWriter writer = new ConsoleWriter();
+            FileWriter fWriter = new FileWriter(pathFile);
             ICommandInterpreter commandInterpreter = new CommandInterpreter();
             IController controller = new Controller();
 
-            IEngine engine = new Engine(reader, writer, commandInterpreter, controller);
+            IEngine engine = new Engine(reader, fWriter, commandInterpreter, controller);
 
             engine.Run();
         }

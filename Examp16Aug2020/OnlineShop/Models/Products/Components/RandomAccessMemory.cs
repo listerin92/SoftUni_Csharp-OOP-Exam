@@ -11,7 +11,5 @@ namespace OnlineShop.Models.Products.Components
         {
             this.OverallPerformance *= PERF_MULTIPLIER;
         }
-        public override ComponentType ComponentType => ComponentType.RandomAccessMemory;
-
     }
 }

@@ -11,9 +11,9 @@ namespace OnlineShop.Core
 {
     public class Controller : IController
     {
-        private ICollection<IComputer> computers;
-        private ICollection<IPeripheral> peripherals;
-        private ICollection<IComponent> components;
+        private readonly ICollection<IComputer> computers;
+        private readonly ICollection<IPeripheral> peripherals;
+        private readonly ICollection<IComponent> components;
         public Controller()
         {
             this.computers = new List<IComputer>();
@@ -22,20 +22,17 @@ namespace OnlineShop.Core
         }
         public string AddComputer(string computerType, int id, string manufacturer, string model, decimal price)
         {
-            Computer computer;
-            if (computerType == nameof(DesktopComputer))
+            var existiongComputer = this.computers.FirstOrDefault(c => c.Id == id);
+            if (existiongComputer!= null)
             {
-                computer = new DesktopComputer(id, manufacturer, model, price);
+                throw new ArgumentException(ExceptionMessages.ExistingComputerId);
             }
-            else if (computerType == nameof(Laptop))
+            Computer computer = computerType switch
             {
-                computer = new Laptop(id, manufacturer, model, price);
-
-            }
-            else
-            {
-                throw new ArgumentException(ExceptionMessages.NotExistingComputerId);
-            }
+                nameof(DesktopComputer) => new DesktopComputer(id, manufacturer, model, price),
+                nameof(Laptop) => new Laptop(id, manufacturer, model, price),
+                _ => throw new ArgumentException(ExceptionMessages.InvalidComputerType)
+            };
             this.computers.Add(computer);
             string message = string.Format(SuccessMessages.AddedComputer, computer.Id);
             return message;
@@ -44,40 +41,24 @@ namespace OnlineShop.Core
         {
             CheckExistingComputer(computerId);
             CheckExistingComponent(id);
-            IComponent component = null;
-            if (componentType == nameof(CentralProcessingUnit))
-            {
-                component = new CentralProcessingUnit(id, manufacturer, model, price, overallPerformance, generation);
-            }
-            else if (componentType == nameof(Motherboard))
-            {
-                component = new Motherboard(id, manufacturer, model, price, overallPerformance, generation);
 
-            }
-            else if (componentType == nameof(PowerSupply))
+            IComponent component = componentType switch
             {
-                component = new PowerSupply(id, manufacturer, model, price, overallPerformance, generation);
-            }
-            else if (componentType == nameof(RandomAccessMemory))
-            {
-                component = new RandomAccessMemory(id, manufacturer, model, price, overallPerformance, generation);
-            }
-            else if (componentType == nameof(SolidStateDrive))
-            {
-                component = new SolidStateDrive(id, manufacturer, model, price, overallPerformance, generation);
-            }
-            else if (componentType == nameof(VideoCard))
-            {
-                component = new VideoCard(id, manufacturer, model, price, overallPerformance, generation);
-            }
-            else
-            {
-                throw new ArgumentException(ExceptionMessages.InvalidComponentType);
-            }
+                nameof(CentralProcessingUnit) => new CentralProcessingUnit(id, manufacturer, model, price,
+                    overallPerformance, generation),
+                nameof(Motherboard) => new Motherboard(id, manufacturer, model, price, overallPerformance, generation),
+                nameof(PowerSupply) => new PowerSupply(id, manufacturer, model, price, overallPerformance, generation),
+                nameof(RandomAccessMemory) => new RandomAccessMemory(id, manufacturer, model, price, overallPerformance,
+                    generation),
+                nameof(SolidStateDrive) => new SolidStateDrive(id, manufacturer, model, price, overallPerformance,
+                    generation),
+                nameof(VideoCard) => new VideoCard(id, manufacturer, model, price, overallPerformance, generation),
+                _ => throw new ArgumentException(ExceptionMessages.InvalidComponentType)
+            };
             IComputer computer = this.computers.FirstOrDefault(x => x.Id == computerId);
             computer.AddComponent(component);
             this.components.Add(component);
-            
+
 
             return string.Format(SuccessMessages.AddedComponent, componentType, id, computerId);
         }
@@ -85,66 +66,73 @@ namespace OnlineShop.Core
 
         public string RemoveComponent(string componentType, int computerId)
         {
-            var computerWithID = this.computers.First(x => x.Id == computerId);
-            var component = this.components.First(x => x.GetType().Name == componentType);
+            var computerWithID = this.computers.FirstOrDefault(x => x.Id == computerId);
 
-                return $"Successfully removed {componentType} with id {computerId}.";
+            if (computerWithID == null)
+            {
+                throw new ArgumentException(ExceptionMessages.NotExistingComputerId);
+            }
+
+            var component = computerWithID.RemoveComponent(componentType);
+
+            return string.Format(SuccessMessages.RemovedComponent, componentType, component.Id);
         }
 
         public string AddPeripheral(int computerId, int id, string peripheralType, string manufacturer, string model, decimal price, double overallPerformance, string connectionType)
         {
             CheckExistingComputer(computerId);
-            CheckExistingPeripheral(id);
-            IPeripheral peripheral = null;
-            if (peripheralType == nameof(Headset))
+            if (this.peripherals.Any(p=>p.Id == id))
             {
-                peripheral = new Headset(id, manufacturer, model, price, overallPerformance, connectionType);
+                throw new ArgumentException(ExceptionMessages.ExistingPeripheralId);
             }
-            else if (peripheralType == nameof(Keyboard))
+            IPeripheral peripheral = peripheralType switch
             {
-                peripheral = new Keyboard(id, manufacturer, model, price, overallPerformance, connectionType);
-            }
-            else if (peripheralType == nameof(Monitor))
-            {
-                peripheral = new Monitor(id, manufacturer, model, price, overallPerformance, connectionType);
-            }
-            else if (peripheralType == nameof(Mouse))
-            {
-                peripheral = new Mouse(id, manufacturer, model, price, overallPerformance, connectionType);
-            }
-            else
-            {
-                throw new ArgumentException(ExceptionMessages.InvalidPeripheralType);
-            }
+                nameof(Headset) => new Headset(id, manufacturer, model, price, overallPerformance, connectionType),
+                nameof(Keyboard) => new Keyboard(id, manufacturer, model, price, overallPerformance, connectionType),
+                nameof(Monitor) => new Monitor(id, manufacturer, model, price, overallPerformance, connectionType),
+                nameof(Mouse) => new Mouse(id, manufacturer, model, price, overallPerformance, connectionType),
+                _ => throw new ArgumentException(ExceptionMessages.InvalidPeripheralType)
+            };
             IComputer computer = this.computers.FirstOrDefault(x => x.Id == computerId);
 
+            this.peripherals.Add(peripheral);
             computer.AddPeripheral(peripheral);
-            this.peripherals.Add((Peripheral)peripheral);
-            //this.computers.Add(computer);
 
-            return $"Peripheral {peripheral.GetType().Name} with id {peripheral.Id} added successfully in computer with id {computer.Id}.";
+
+            return string.Format(SuccessMessages.AddedPeripheral, peripheralType, id, computerId);
         }
 
         public string RemovePeripheral(string peripheralType, int computerId)
         {
 
             var computer = this.computers.FirstOrDefault(x => x.Id == computerId);
-            IPeripheral peripheral = computer.Peripherals.First(x => x.GetType().Name == peripheralType);
-            computer.RemovePeripheral(peripheral.GetType().Name);
+            if (computer == null)
+            {
+                throw new ArgumentException(ExceptionMessages.NotExistingComputerId);
+            }
+            var peripheral =  computer.RemovePeripheral(peripheralType);
 
             this.peripherals.Remove(peripheral);
-            return $"Successfully removed {peripheral.GetType().Name} with id {peripheral.Id}.";
+            return string.Format(SuccessMessages.RemovedPeripheral, peripheralType, peripheral.Id);
         }
 
         public string BuyComputer(int id)
         {
             var computer = this.computers.FirstOrDefault(x => x.Id == id);
+            if (computer == null)
+            {
+                throw new ArgumentException(ExceptionMessages.NotExistingComputerId);
+            }
             this.computers.Remove(computer);
             return computer.ToString();
         }
         public string BuyBest(decimal budget)
         {
-            var computer = this.computers.Where(price=>price.Price <= budget).OrderByDescending(x=>x.OverallPerformance).First();
+            var computer = this.computers
+                .Where(price => price.Price <= budget)
+                .OrderByDescending(x => x.OverallPerformance)
+                .FirstOrDefault();
+
             if (computer == null)
             {
                 string message = string.Format(ExceptionMessages.CanNotBuyComputer, budget);
@@ -156,8 +144,11 @@ namespace OnlineShop.Core
 
         public string GetComputerData(int id)
         {
-            CheckExistingComputer(id);
             var computer = this.computers.FirstOrDefault(x => x.Id == id);
+            if (computer == null)
+            {
+                throw new ArgumentException(ExceptionMessages.NotExistingComputerId);
+            }
             return computer.ToString();
         }
 
@@ -169,18 +160,10 @@ namespace OnlineShop.Core
                 throw new ArgumentException(ExceptionMessages.NotExistingComputerId);
             }
         }
-        private void CheckExistingPeripheral(int peripheralsId)
-        {
-            var existingPeripheral = this.peripherals.FirstOrDefault(x => x.Id == peripheralsId);
-            if (existingPeripheral != null)
-            {
-                throw new ArgumentException(ExceptionMessages.ExistingPeripheralId);
-            }
-        }
         private void CheckExistingComponent(int componentsId)
         {
-            var existingCompoments = this.components.FirstOrDefault(x => x.Id == componentsId);
-            if (existingCompoments != null)
+            var existingComponents = this.components.Any(x => x.Id == componentsId);
+            if (existingComponents)
             {
                 throw new ArgumentException(ExceptionMessages.ExistingComponentId);
             }

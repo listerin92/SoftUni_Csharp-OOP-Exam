@@ -8,7 +8,5 @@ namespace OnlineShop.Models.Products.Peripherals
             : base(id, manufacturer, model, price, overallPerformance, connectionType)
         {
         }
-        public PeripheralType PeripheralType => PeripheralType.Monitor;
-
     }
 }
