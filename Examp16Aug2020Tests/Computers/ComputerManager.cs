@@ -39,6 +39,7 @@ namespace Computers
             return computer;
         }
 
+
         public Computer GetComputer(string manufacturer, string model)
         {
             this.ValidateNullValue(manufacturer, nameof(manufacturer), CanNotBeNullMessage);
@@ -54,6 +55,7 @@ namespace Computers
 
             return computer;
         }
+
 
         public ICollection<Computer> GetComputersByManufacturer(string manufacturer)
         {
