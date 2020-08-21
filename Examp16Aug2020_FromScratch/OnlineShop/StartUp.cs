@@ -3,6 +3,7 @@ using System.IO;
 using OnlineShop.Core;
 using OnlineShop.IO;
 using OnlineShop.Models.Products.Components;
+using OnlineShop.Models.Products.Computers;
 
 namespace OnlineShop
 {
@@ -17,9 +18,15 @@ namespace OnlineShop
             IReader reader = new ConsoleReader();
             IWriter writer = new ConsoleWriter();
             ICommandInterpreter commandInterpreter = new CommandInterpreter();
-            IController controller = null; //new Controller();
-            //CentralProcessingUnit cp = new CentralProcessingUnit(5, "Intel", "I7", 2000, 200, 3);
-            //Console.WriteLine(cp.OverallPerformance);
+            IController controller = new Controller();
+
+            ////tests
+            //IComponent cp = new CentralProcessingUnit(5, "Intel", "I7", 2000, 200, 3);
+            //Computer computer = new DesktopComputer(1, "Intel", "Qkiq", 100);
+            //computer.AddComponent(cp);
+            //computer.RemoveComponent(nameof(CentralProcessingUnit));
+
+            ////end tests
 
             IEngine engine = new Engine(reader, writer, commandInterpreter, controller);
             engine.Run();

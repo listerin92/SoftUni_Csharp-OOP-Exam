@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using OnlineShop.Common.Constants;
 using OnlineShop.Models.Products.Components;
 using OnlineShop.Models.Products.Peripherals;
 
@@ -8,8 +10,8 @@ namespace OnlineShop.Models.Products.Computers
 {
     public abstract class Computer : Product, IComputer
     {
-        private readonly IReadOnlyCollection<IComponent> _components;
-        private readonly IReadOnlyCollection<IPeripheral> _peripherals;
+        private readonly List<IComponent> _components;
+        private readonly List<IPeripheral> _peripherals;
         private double _overallPerformance;
 
         protected Computer(int id, string manufacturer, string model, decimal price, double overallPerformance)
@@ -19,9 +21,9 @@ namespace OnlineShop.Models.Products.Computers
             this._peripherals = new List<IPeripheral>();
         }
 
-        public IReadOnlyCollection<IComponent> Components => _components;
+        public IReadOnlyCollection<IComponent> Components => _components.AsReadOnly();
 
-        public IReadOnlyCollection<IPeripheral> Peripherals => _peripherals;
+        public IReadOnlyCollection<IPeripheral> Peripherals => _peripherals.AsReadOnly();
 
         public override double OverallPerformance
         {
@@ -49,22 +51,60 @@ namespace OnlineShop.Models.Products.Computers
 
         public void AddComponent(IComponent component)
         {
-            throw new System.NotImplementedException();
+            if (this._components.Any(x => x.GetType().Name == component.GetType().Name))
+            {
+                string message = string.Format(ExceptionMessages.ExistingComponent, component.GetType().Name,
+                    this.GetType().Name, this.Id);
+                throw new ArgumentException(message);
+            }
+            this._components.Add(component);
         }
 
         public IComponent RemoveComponent(string componentType)
         {
-            throw new System.NotImplementedException();
+            if (!this._components.Any() || this._components.All(x => x.GetType().Name != componentType))
+            {
+                string message = string.Format(ExceptionMessages.NotExistingComponent,
+                    componentType,
+                    this.GetType().Name,
+                    this.Id);
+                throw new ArgumentException(message);
+            }
+            IComponent componentToRemove = this._components
+                .First(x => x.GetType().Name == componentType);
+
+            this._components.Remove(componentToRemove);
+            return componentToRemove;
         }
 
         public void AddPeripheral(IPeripheral peripheral)
         {
-            throw new System.NotImplementedException();
+            if (this._peripherals.Any(x => 
+                x.GetType().Name == peripheral.GetType().Name))
+            {
+                string message = string.Format(ExceptionMessages.ExistingPeripheral,
+                    peripheral.GetType().Name,
+                    this.GetType().Name, this.Id);
+                throw new ArgumentException(message);
+            }
+            this._peripherals.Add(peripheral);
         }
 
         public IPeripheral RemovePeripheral(string peripheralType)
         {
-            throw new System.NotImplementedException();
+            if (!this._peripherals.Any() ||
+                this._peripherals.All(x => 
+                    x.GetType().Name != peripheralType))
+            {
+                string message = string.Format(ExceptionMessages.NotExistingPeripheral, peripheralType,
+                    this.GetType().Name, this.Id);
+                throw new ArgumentException(message);
+            }
+            IPeripheral peripheralToRemove = this._peripherals
+                .First(x => x.GetType().Name == peripheralType);
+
+            this._peripherals.Remove(peripheralToRemove);
+            return peripheralToRemove;
         }
 
         public override string ToString()
