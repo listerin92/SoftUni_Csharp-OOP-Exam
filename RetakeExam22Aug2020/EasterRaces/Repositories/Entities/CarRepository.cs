@@ -19,7 +19,8 @@ namespace EasterRaces.Repositories.Entities
         public ICar GetByName(string name) 
             => this.cars.FirstOrDefault(x => x.Model == name);
 
-        public IReadOnlyCollection<ICar> GetAll() => this.cars;
+        public IReadOnlyCollection<ICar> GetAll() 
+            => this.cars.AsReadOnly();
 
 
         public bool Remove(ICar model)

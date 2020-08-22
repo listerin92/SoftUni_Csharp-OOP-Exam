@@ -55,7 +55,7 @@ namespace EasterRaces.Models.Cars.Entities
         //TODO check logic !!!
         public double CalculateRacePoints(int laps)
         {
-            return (this.CubicCentimeters / this.HorsePower) * laps;
+            return this.CubicCentimeters / this.HorsePower * laps;
         }
     }
 }

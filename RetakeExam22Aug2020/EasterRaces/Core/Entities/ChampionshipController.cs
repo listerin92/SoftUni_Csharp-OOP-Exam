@@ -16,19 +16,17 @@ namespace EasterRaces.Core.Entities
     public class ChampionshipController : IChampionshipController
 
     {
-        private DriverRepository driverRepository;
-        private CarRepository carRepository;
-        private RaceRepository raceRepository;
+        private readonly DriverRepository driverRepository = new DriverRepository();
+        private readonly CarRepository carRepository = new CarRepository();
+        private readonly RaceRepository raceRepository = new RaceRepository();
         public ChampionshipController()
         {
-            this.driverRepository = new DriverRepository();
-            this.carRepository = new CarRepository();
-            this.raceRepository = new RaceRepository();
+
         }
         public string CreateDriver(string driverName)
         {
             IDriver driver = new Driver(driverName);
-            if (this.driverRepository.GetAll().Any(x=>x.Name == driverName))
+            if (this.driverRepository.GetAll().Any(x => x.Name == driverName))
             {
                 string message = string.Format(ExceptionMessages.DriversExists, driverName);
                 throw new ArgumentException(message);
@@ -41,25 +39,21 @@ namespace EasterRaces.Core.Entities
 
         public string CreateCar(string type, string model, int horsePower)
         {
-            ICar car = null;
-            if (type == "Muscle")
+            ICar car = type switch
             {
-                car = new MuscleCar(model, horsePower);
-            }
-            else if (type == "Sports")
-            {
-                car = new SportsCar(model, horsePower);
+                "Muscle" => new MuscleCar(model, horsePower),
+                "Sports" => new SportsCar(model, horsePower),
+                _ => null
+            };
 
-            }
-
-            if (this.carRepository.GetAll().Any(x=>x.Model == model))
+            if (this.carRepository.GetAll().Any(x => x.Model == model))
             {
                 string message = string.Format(ExceptionMessages.CarExists, model);
                 throw new ArgumentException(message);
             }
             this.carRepository.Add(car);
 
-            string messageOut = string.Format(OutputMessages.CarCreated, car.GetType().Name, model);
+            string messageOut = string.Format(OutputMessages.CarCreated, car?.GetType().Name, model);
             return messageOut;
         }
         public string AddCarToDriver(string driverName, string carModel)
@@ -105,7 +99,10 @@ namespace EasterRaces.Core.Entities
 
         public string CreateRace(string name, int laps)
         {
-            var existingRace = this.raceRepository.GetByName(name);
+            var existingRace = this.raceRepository
+                .GetAll()
+                .FirstOrDefault(x => x.Name == name);
+
             if (existingRace != null)
             {
                 string message = string.Format(ExceptionMessages.RaceExists, name);
@@ -123,7 +120,10 @@ namespace EasterRaces.Core.Entities
 
         public string StartRace(string raceName)
         {
-            IRace race = this.raceRepository.GetByName(raceName);
+            IRace race = this.raceRepository
+                .GetAll()
+                .FirstOrDefault(x=>x.Name == raceName);
+
             if (race == null)
             {
                 string message = string.Format(ExceptionMessages.RaceNotFound, raceName);
@@ -143,13 +143,13 @@ namespace EasterRaces.Core.Entities
 
             this.raceRepository.Remove(race);
             StringBuilder sb = new StringBuilder();
-
             
-                sb.AppendLine($"Driver {sortedDrivers[0].Name} wins {race.Name} race.");
-                sb.AppendLine($"Driver {sortedDrivers[1].Name} is second in {race.Name} race.");
-                sb.AppendLine($"Driver {sortedDrivers[2].Name} is third in {race.Name} race.");
+            sb.AppendLine($"Driver {sortedDrivers[0].Name} wins {race.Name} race.");
+            sb.AppendLine($"Driver {sortedDrivers[1].Name} is second in {race.Name} race.");
+            sb.AppendLine($"Driver {sortedDrivers[2].Name} is third in {race.Name} race.");
 
-                return sb.ToString().TrimEnd();
+            return sb.ToString().TrimEnd();
         }
+
     }
 }

@@ -25,6 +25,6 @@ namespace EasterRaces.Repositories.Entities
             => this.races.FirstOrDefault(x => x.Name == name);
 
         public IReadOnlyCollection<IRace> GetAll() 
-            => this.races;
+            => this.races.AsReadOnly();
     }
 }

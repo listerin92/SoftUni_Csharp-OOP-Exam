@@ -25,6 +25,6 @@ namespace EasterRaces.Repositories.Entities
             => this.drivers.FirstOrDefault(x => x.Name == name);
 
         public IReadOnlyCollection<IDriver> GetAll() 
-            => this.drivers;
+            => this.drivers.AsReadOnly();
     }
 }
