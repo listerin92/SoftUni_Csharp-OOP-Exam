@@ -12,13 +12,14 @@ namespace OnlineShop.Models.Products.Computers
     {
         private readonly List<IComponent> _components;
         private readonly List<IPeripheral> _peripherals;
-        private double _overallPerformance;
+        private readonly double _overallPerformance;
 
         protected Computer(int id, string manufacturer, string model, decimal price, double overallPerformance)
             : base(id, manufacturer, model, price, overallPerformance)
         {
             this._components = new List<IComponent>();
             this._peripherals = new List<IPeripheral>();
+            this._overallPerformance = overallPerformance;
         }
 
         public IReadOnlyCollection<IComponent> Components => _components.AsReadOnly();
@@ -33,7 +34,7 @@ namespace OnlineShop.Models.Products.Computers
                 {
                     return this._overallPerformance;
                 }
-                //TODO check logic!!!
+                
                 return base.OverallPerformance + this._components.Average(x => x.OverallPerformance);
             }
         }
@@ -79,7 +80,7 @@ namespace OnlineShop.Models.Products.Computers
 
         public void AddPeripheral(IPeripheral peripheral)
         {
-            if (this._peripherals.Any(x => 
+            if (this._peripherals.Any(x =>
                 x.GetType().Name == peripheral.GetType().Name))
             {
                 string message = string.Format(ExceptionMessages.ExistingPeripheral,
@@ -93,7 +94,7 @@ namespace OnlineShop.Models.Products.Computers
         public IPeripheral RemovePeripheral(string peripheralType)
         {
             if (!this._peripherals.Any() ||
-                this._peripherals.All(x => 
+                this._peripherals.All(x =>
                     x.GetType().Name != peripheralType))
             {
                 string message = string.Format(ExceptionMessages.NotExistingPeripheral, peripheralType,
@@ -118,12 +119,21 @@ namespace OnlineShop.Models.Products.Computers
                 sb.AppendLine($"  {component}");
             }
 
-            var averageOverallPeripherals = this._peripherals.Average(x => x.OverallPerformance);
-            sb.AppendLine(
-                $" Peripherals ({this.Peripherals.Count}); Average Overall Performance ({averageOverallPeripherals}):");
-            foreach (var peripheral in this._peripherals)
+            var averageOverallPeripherals = 0.0d;
+            if (this._peripherals.Any())
             {
-                sb.AppendLine($"  {peripheral}");
+
+                averageOverallPeripherals = this._peripherals.Average(x => x.OverallPerformance);
+            }
+
+            sb.AppendLine($" Peripherals ({this.Peripherals.Count}); Average Overall Performance ({averageOverallPeripherals:F2}):");
+            if (this._peripherals.Any())
+            {
+                foreach (var peripheral in this._peripherals)
+                {
+                    sb.AppendLine($"  {peripheral}");
+                }
+
             }
 
             return sb.ToString().TrimEnd();
